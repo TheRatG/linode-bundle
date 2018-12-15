@@ -3,3 +3,16 @@ services:
         autowire: true
         autoconfigure: true
         public: false
+
+    _instanceof:
+        TheRat\LinodeBundle\Aware\LinodeClientAwareInterface:
+            public: true
+            calls:
+                - [setLinodeClient, ['@TheRat\LinodeBundle\LinodeClient']]
+
+    TheRat\LinodeBundle\:
+        resource: '../../*'
+        exclude: '../../{Tests,Aware}'
+
+    TheRat\LinodeBundle\LinodeClient:
+        public: true
