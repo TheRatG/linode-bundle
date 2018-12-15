@@ -1,0 +1,3 @@
+linode_homepage:
+    path:     /
+    defaults: { _controller: LinodeBundle:Default:index }
