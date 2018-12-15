@@ -19,6 +19,7 @@
     "require-dev": {
         "symfony/var-dumper": "~3.4|~4.0"
     },
+    "psr-4": { "TheRat\\LinodeBundle\\": "" },
     "extra": {
         "branch-alias": {
             "dev-master": "4.0-dev"
