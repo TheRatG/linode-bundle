@@ -1,0 +1,9 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    TheRat\LinodeBundle\MessageBus:
+        resource: '../../*'
+        exclude: '../../*{Message}'

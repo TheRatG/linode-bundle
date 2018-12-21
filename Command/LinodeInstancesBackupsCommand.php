@@ -27,7 +27,7 @@ class LinodeInstancesBackupsCommand extends ContainerAwareCommand
         $io->title('List Backups for ' . $linodeId);
 
         $service = $this->getContainer()->get(LinodeBackupsService::class);
-        $response = $service->listBackups($linodeId);
+        $response = $service->loadList($linodeId);
 
         $backups = [];
         foreach ($response->getData() as $item) {

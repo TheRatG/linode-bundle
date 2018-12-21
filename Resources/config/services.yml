@@ -1,3 +1,6 @@
+imports:
+    - { resource: services/message_bus.yml }
+
 services:
     _defaults:
         autowire: true
@@ -12,7 +15,7 @@ services:
 
     TheRat\LinodeBundle\:
         resource: '../../*'
-        exclude: '../../{Tests,Aware}'
+        exclude: '../../{Tests,Aware,MessageBus}'
 
     TheRat\LinodeBundle\LinodeClient:
         public: true
