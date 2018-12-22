@@ -2,15 +2,19 @@
 
 namespace TheRat\LinodeBundle\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use TheRat\LinodeBundle\Services\LinodeBackupsService;
 
-class LinodeInstancesBackupsCommand extends ContainerAwareCommand
+class LinodeInstancesBackupsCommand extends Command implements ContainerAwareInterface
 {
+    use ContainerAwareTrait;
+
     protected function configure()
     {
         $this
@@ -26,7 +30,7 @@ class LinodeInstancesBackupsCommand extends ContainerAwareCommand
         $io = new SymfonyStyle($input, $output);
         $io->title('List Backups for ' . $linodeId);
 
-        $service = $this->getContainer()->get(LinodeBackupsService::class);
+        $service = $this->container->get(LinodeBackupsService::class);
         $response = $service->loadList($linodeId);
 
         $backups = [];

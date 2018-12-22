@@ -2,15 +2,19 @@
 
 namespace TheRat\LinodeBundle\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use TheRat\LinodeBundle\Services\LinodeInstancesService;
 
-class LinodeInstancesListCommand extends ContainerAwareCommand
+class LinodeInstancesListCommand extends Command implements ContainerAwareInterface
 {
+    use ContainerAwareTrait;
+
     protected function configure()
     {
         $this
@@ -25,7 +29,7 @@ class LinodeInstancesListCommand extends ContainerAwareCommand
         $io = new SymfonyStyle($input, $output);
         $io->title('List Linodes');
 
-        $service = $this->getContainer()->get(LinodeInstancesService::class);
+        $service = $this->container->get(LinodeInstancesService::class);
         $response = $service->loadList((int)$input->getOption('page'), (int)$input->getOption('page_size'));
 
         $tableRows = [];
@@ -41,7 +45,7 @@ class LinodeInstancesListCommand extends ContainerAwareCommand
             ];
         }
         $io->table(
-            array('id', 'label', 'created', 'status', 'type', 'ipv4'),
+            ['id', 'label', 'created', 'status', 'type', 'ipv4'],
             $tableRows
         );
 
