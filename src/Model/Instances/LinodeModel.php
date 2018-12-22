@@ -6,6 +6,18 @@ use TheRat\LinodeBundle\Model\AbstractModel;
 
 class LinodeModel extends AbstractModel
 {
+    const STATUS_RUNNING = 'running';
+    const STATUS_OFFLINE = 'offline';
+    const STATUS_BOOTING = 'booting';
+    const STATUS_REBOOTING = 'rebooting';
+    const STATUS_SHUTTING_DOWN = 'shutting_down';
+    const STATUS_PROVISIONING = 'provisioning';
+    const STATUS_DELETING = 'deleting';
+    const STATUS_MIGRATING = 'migrating';
+    const STATUS_REBUILDING = 'rebuilding';
+    const STATUS_CLONING = 'cloning';
+    const STATUS_RESTORING = 'restoring';
+
     /**
      * @var string
      */
@@ -59,7 +71,7 @@ class LinodeModel extends AbstractModel
      */
     protected $ipv6;
     /**
-     * @var string
+     * @var array
      */
     protected $specs;
     /**
@@ -114,7 +126,7 @@ class LinodeModel extends AbstractModel
     /**
      * @return string
      */
-    public function getImage(): string
+    public function getImage(): ?string
     {
         return $this->image;
     }
@@ -123,7 +135,7 @@ class LinodeModel extends AbstractModel
      * @param string $image
      * @return LinodeModel
      */
-    public function setImage(string $image): LinodeModel
+    public function setImage(?string $image): LinodeModel
     {
         $this->image = $image;
         return $this;
@@ -310,18 +322,18 @@ class LinodeModel extends AbstractModel
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getSpecs(): string
+    public function getSpecs(): array
     {
         return $this->specs;
     }
 
     /**
-     * @param string $specs
+     * @param array $specs
      * @return LinodeModel
      */
-    public function setSpecs(string $specs): LinodeModel
+    public function setSpecs(array $specs): LinodeModel
     {
         $this->specs = $specs;
         return $this;

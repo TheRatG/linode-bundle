@@ -16,7 +16,9 @@ services:
 
     TheRat\LinodeBundle\MessageHandler\:
         resource: '../../MessageHandler/'
-        tags: [messenger.message_handler]
+        tags:
+            - {name: messenger.message_handler}
+            - { name: monolog.logger, channel: 'linode' }
 
     TheRat\LinodeBundle\LinodeClient:
         public: true

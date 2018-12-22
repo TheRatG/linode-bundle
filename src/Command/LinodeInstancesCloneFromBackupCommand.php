@@ -7,131 +7,60 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
-use TheRat\LinodeBundle\Model\Networking\AssigmentModel;
-use TheRat\LinodeBundle\Model\Networking\AssigmentCollection;
-use TheRat\LinodeBundle\Services\LinodeBackupsService;
-use TheRat\LinodeBundle\Services\LinodeInstancesService;
-use TheRat\LinodeBundle\Services\NetworkingService;
+use Symfony\Component\Messenger\MessageBusInterface;
+use TheRat\LinodeBundle\Message\CreateByLastBackupMessage;
+use TheRat\LinodeBundle\Message\LinodeBootMessage;
+use TheRat\LinodeBundle\Message\SwapIpv4Message;
 
-class LinodeInstancesCloneFromBackupCommand extends Command implements ContainerAwareInterface
+class LinodeInstancesCloneFromBackupCommand extends Command
 {
-    use ContainerAwareTrait;
+    const NAME = 'linode:instances:create-by-last-backup';
+    const DESCRIPTION = 'Create linode instance by last backup';
 
-    protected $io;
+    /**
+     * @var MessageBusInterface
+     */
+    private $messageBus;
+
+    public function __construct(MessageBusInterface $messageBus)
+    {
+        parent::__construct(self::NAME);
+
+        $this->messageBus = $messageBus;
+    }
 
     protected function configure()
     {
         $this
-            ->setName('linode:instances:clone-from-backup')
+            ->setName(self::NAME)
             ->addArgument('linode-id', InputArgument::REQUIRED, 'ID of the Linode to look up')
-            ->setDescription('Clone linode instance from backup');
+            ->setDescription(self::DESCRIPTION);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $io->title('Clone linode instance from backup');
-        $this->io = $io;
+        $io->title(self::DESCRIPTION);
 
-        $linodeId = $input->getArgument('linode-id');
-        $instancesService = $this->container->get(LinodeInstancesService::class);
+        $linodeId = (int)$input->getArgument('linode-id');
 
-        $io->writeln('Finding linode instance data...');
-        $viewData = $instancesService->view($linodeId);
-        $viewData = $viewData->getData();
+        $message = new CreateByLastBackupMessage($linodeId);
+        $this->messageBus->dispatch($message);
 
-        $sourceId = $viewData['id'];
-        $sourceLabel = $viewData['label'];
-        $sourceType = $viewData['type'];
-        $sourceRegion = $viewData['region'];
-        $sourceIpv4 = $viewData['ipv4'][0];
-        $cloneLabel = $this->buildLabel($sourceLabel);
-        $io->writeln(vsprintf(
-            'Found data, label: %s, type: %s, region: %s', [
-                $sourceLabel,
-                $sourceType,
-                $sourceRegion,
-            ]
-        ));
+        $newLinode = $message->getNewLinode();
+        if ($newLinode) {
+            $message = new LinodeBootMessage($newLinode->getId());
+            $this->messageBus->dispatch($message);
 
-        $io->writeln('Finding linode backups data...');
-        $backupService = $this->container->get(LinodeBackupsService::class);
-        $backups = $backupService->loadList($linodeId);
-        $io->writeln(sprintf('Found %s backups', count($backups)));
-
-        if (!empty($backups)) {
-            $backup = array_shift($backups);
-
-            $io->section('Create new instance...');
-//            $response = $instancesService->create($sourceType, $sourceRegion, $backup['id'], $cloneLabel);
-//            $io->writeln(sprintf(
-//                'Created, id: %s, label: %s', $response->getData()['id'], $response->getData()['label']
-//            ));
-
-            do {
-                $cloneId = 12159854;
-                $viewData = $instancesService->view($cloneId);
-                $viewData = $viewData->getData();
-                $cloneIpv4 = $viewData['ipv4'][0];
-
-                $io->writeln(sprintf('Status is: %s', $viewData['status']));
-                $restoring = 'restoring' === $viewData['status'];
-                if ($restoring) {
-                    sleep(5);
-                }
-            } while ($restoring);
-
-            $io->section(sprintf('Boot linode %s', $cloneId));
-            $instancesService->boot($cloneId);
-            do {
-                $viewData = $instancesService->view($cloneId);
-                $viewData = $viewData->getData();
-
-                $io->writeln(sprintf('Status is: %s', $viewData['status']));
-                $booting = 'booting' === $viewData['status'];
-                if ($booting) {
-                    sleep(5);
-                }
-            } while ($booting);
-
-            $io->section(vsprintf('Swap ip, source [%s:%s] -> clone [%s:%s]', [
-                $sourceId,
-                $sourceIpv4,
-                $cloneId,
-                $cloneIpv4,
-            ]));
-
-            $sourceAssigment = new AssigmentModel();
-            $sourceAssigment->setLinodeId($sourceId);
-            $sourceAssigment->setAddress($cloneIpv4);
-
-            $cloneAssigment = new AssigmentModel();
-            $cloneAssigment->setLinodeId($cloneId);
-            $cloneAssigment->setAddress($sourceIpv4);
-
-            $assigmentCollection = new AssigmentCollection([
-                $sourceAssigment,
-                $cloneAssigment,
-            ]);
-            $data = $this->container->get(NetworkingService::class)->ipv4Assign($sourceRegion, $assigmentCollection);
-            var_dump($data);
+            $newLinode = $message->getLinode();
+            if ($newLinode) {
+                $message = new SwapIpv4Message($linodeId, $newLinode->getId());
+                $this->messageBus->dispatch($message);
+            } else {
+                $io->error('Invalid return data from boot message');
+            }
         } else {
-            $io->warning('No backups');
+            $io->error(sprintf('Linode not found by id: %s', $linodeId));
         }
-    }
-
-    protected function buildLabel($sourceLabel)
-    {
-        $ar = explode('_', $sourceLabel);
-        $last = array_pop($ar);
-        if (is_numeric($last)) {
-            $last++;
-        } else {
-            $last = 1;
-        }
-        array_push($ar, $last);
-        return implode('_', $ar);
     }
 }
