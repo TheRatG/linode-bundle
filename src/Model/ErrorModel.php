@@ -1,8 +1,8 @@
 <?php
 
-namespace TheRat\LinodeBundle\Response;
+namespace TheRat\LinodeBundle\Model;
 
-class ErrorResponse
+class ErrorModel
 {
     /**
      * @var string
@@ -17,16 +17,16 @@ class ErrorResponse
     /**
      * @return string
      */
-    public function getReason(): ?string
+    public function getReason(): string
     {
         return $this->reason;
     }
 
     /**
      * @param string $reason
-     * @return ErrorResponse
+     * @return ErrorModel
      */
-    public function setReason(?string $reason): ErrorResponse
+    public function setReason(string $reason): ErrorModel
     {
         $this->reason = $reason;
         return $this;
@@ -35,16 +35,16 @@ class ErrorResponse
     /**
      * @return string
      */
-    public function getField(): ?string
+    public function getField(): string
     {
         return $this->field;
     }
 
     /**
      * @param string $field
-     * @return ErrorResponse
+     * @return ErrorModel
      */
-    public function setField(?string $field): ErrorResponse
+    public function setField(string $field): ErrorModel
     {
         $this->field = $field;
         return $this;

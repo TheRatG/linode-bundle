@@ -12,30 +12,40 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use TheRat\LinodeBundle\Services\LinodeBackupsService;
 
-class LinodeInstancesBackupsViewCommand extends Command implements ContainerAwareInterface
+class LinodeInstancesBackupsViewCommand extends Command
 {
-    use ContainerAwareTrait;
+    const NAME = 'linode:instances:backups-view';
+    const DESCRIPTION = 'Returns information about a Backup.';
 
+    /**
+     * @var LinodeBackupsService
+     */
+    private $backupsService;
+
+    public function __construct(LinodeBackupsService $backupsService)
+    {
+        parent::__construct(self::NAME);
+
+        $this->backupsService = $backupsService;
+    }
     protected function configure()
     {
         $this
-            ->setName('linode:instances:backups:view')
             ->addArgument('linode-id', InputArgument::REQUIRED, 'ID of the Linode to look up')
             ->addArgument('backup-id', InputArgument::REQUIRED, 'The ID of the Linode the Backup belongs to.')
-            ->setDescription('Returns information about a Backup.');
+            ->setDescription(self::DESCRIPTION);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $io->title('View Backup');
+        $io->title(self::DESCRIPTION);
 
-        $service = $this->container->get(LinodeBackupsService::class);
         $linodeId = (int)$input->getArgument('linode-id');
         $backupId = (int)$input->getArgument('backup-id');
-        $response = $service->viewBackup($linodeId, $backupId);
+        $response = $this->backupsService->view($linodeId, $backupId);
 
-        $jsonString = json_encode($response->getData(), JSON_PRETTY_PRINT);
+        $jsonString = json_encode($response->toArray(), JSON_PRETTY_PRINT);
         $io->writeln($jsonString);
     }
 }

@@ -7,41 +7,52 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use TheRat\LinodeBundle\Services\LinodeInstancesService;
 
-class LinodeInstancesListCommand extends Command implements ContainerAwareInterface
+class LinodeInstancesListCommand extends Command
 {
-    use ContainerAwareTrait;
+    const NAME = 'linode:instances:list';
+    const DESCRIPTION = 'Returns an array of all Linode instances on your Account.';
+
+    /**
+     * @var LinodeInstancesService
+     */
+    private $instancesService;
+
+    public function __construct(LinodeInstancesService $instancesService)
+    {
+        parent::__construct(self::NAME);
+
+        $this->instancesService = $instancesService;
+    }
 
     protected function configure()
     {
         $this
-            ->setName('linode:instances:list')
             ->addOption('page', null, InputOption::VALUE_REQUIRED, 1, 'The page of a collection to return.')
             ->addOption('page_size', null, InputOption::VALUE_REQUIRED, 100, 'The number of items to return per page.')
-            ->setDescription('Returns an array of all Linodes on your Account.');
+            ->setDescription(self::DESCRIPTION);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $io->title('List Linodes');
+        $io->title(self::DESCRIPTION);
 
-        $service = $this->container->get(LinodeInstancesService::class);
-        $response = $service->loadList((int)$input->getOption('page'), (int)$input->getOption('page_size'));
+        $list = $this->instancesService->loadList(
+            (int)$input->getOption('page'),
+            (int)$input->getOption('page_size')
+        );
 
         $tableRows = [];
-        foreach ($response->getData() as $row) {
-            $data = $row->getData();
+        foreach ($list as $row) {
             $tableRows[] = [
-                $data['id'],
-                $data['label'],
-                $data['created'],
-                $data['status'],
-                $data['type'],
-                implode(', ', $data['ipv4']),
+                $row->getId(),
+                $row->getLabel(),
+                $row->getCreated()->format('Y-m-d H:i:s'),
+                $row->getStatus(),
+                $row->getType(),
+                implode(', ', $row->getIpv4()),
             ];
         }
         $io->table(
@@ -51,7 +62,7 @@ class LinodeInstancesListCommand extends Command implements ContainerAwareInterf
 
         $io->section('Statistic');
         $io->table(['page', 'pages', 'results'], [
-            [$response->getPage(), $response->getPages(), $response->getResults()],
+            [$list->getPage(), $list->getPages(), $list->getResults()],
         ]);
     }
 }

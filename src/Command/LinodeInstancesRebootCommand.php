@@ -12,27 +12,38 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use TheRat\LinodeBundle\Services\LinodeInstancesService;
 
-class LinodeInstancesRebootCommand extends Command implements ContainerAwareInterface
+class LinodeInstancesRebootCommand extends Command
 {
-    use ContainerAwareTrait;
+    const NAME = 'linode:instances:reboot';
+    const DESCRIPTION = 'Reboot Linode';
+
+    /**
+     * @var LinodeInstancesService
+     */
+    private $instancesService;
+
+    public function __construct(LinodeInstancesService $instancesService)
+    {
+        parent::__construct(self::NAME);
+
+        $this->instancesService = $instancesService;
+    }
 
     protected function configure()
     {
         $this
-            ->setName('linode:instances:reboot')
+            ->setName(self::NAME)
             ->addArgument('linode-id', InputArgument::REQUIRED, 'ID of the Linode to look up')
-            ->setDescription('Get a specific Linode by ID.');
+            ->setDescription(self::DESCRIPTION);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $io->title('Reboot Linode');
+        $io->title(self::DESCRIPTION);
 
-        $service = $this->container->get(LinodeInstancesService::class);
-        $response = $service->reboot((int)$input->getArgument('linode-id'));
+        $this->instancesService->reboot((int)$input->getArgument('linode-id'));
 
-        $jsonString = json_encode($response->getData(), JSON_PRETTY_PRINT);
-        $io->writeln($jsonString);
+        $io->success('Success');
     }
 }

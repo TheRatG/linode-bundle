@@ -5,6 +5,8 @@ namespace TheRat\LinodeBundle\Services;
 use GuzzleHttp\Psr7\ServerRequest;
 use TheRat\LinodeBundle\Aware\LinodeClientAwareInterface;
 use TheRat\LinodeBundle\Aware\LinodeClientAwareTrait;
+use TheRat\LinodeBundle\Model\Instances\LinodeCollection;
+use TheRat\LinodeBundle\Model\Instances\LinodeModel;
 use TheRat\LinodeBundle\Response\ItemResponse;
 use TheRat\LinodeBundle\Response\ListResponse;
 
@@ -15,21 +17,25 @@ class LinodeInstancesService implements LinodeClientAwareInterface
     public function view(int $linodeId)
     {
         $request = new ServerRequest('GET', 'linode/instances/' . $linodeId);
-        $result = $this->getLinodeClient()->send($request);
+        $response = $this->getLinodeClient()->send($request);
+
+        $result = new LinodeModel();
+        $result->populate($response);
 
         return $result;
     }
 
-    public function viewByLabel($label): ?ItemResponse
+    public function viewByLabel($label): ?LinodeModel
     {
         $result = null;
+
         $page = 1;
         do {
             $response = $this->loadList($page++);
-            $rows = $response->getData();
-            foreach ($rows as $row) {
+            foreach ($response['data'] as $row) {
                 if ($label === $row['label']) {
-                    $result = $row;
+                    $result = new LinodeModel();
+                    $result->populate($row);
                     break;
                 }
             }
@@ -38,36 +44,58 @@ class LinodeInstancesService implements LinodeClientAwareInterface
         return $result;
     }
 
-    public function loadList(int $page = 1, int $pageSize = 100): ?ListResponse
+    /**
+     * @param int $page
+     * @param int $pageSize
+     * @return LinodeModel[]|LinodeCollection|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function loadList(int $page = 1, int $pageSize = 100): ?LinodeCollection
     {
         $request = new ServerRequest('GET', 'linode/instances');
         $request->withQueryParams([
             'page' => $page,
-            'page_size' => $pageSize
+            'page_size' => $pageSize,
         ]);
-        $result = $this->getLinodeClient()->send($request);
+
+        $response = $this->getLinodeClient()->send($request);
+        $result = new LinodeCollection($response['data'], $response['page'], $response['pages'], $response['results']);
 
         return $result;
     }
 
-    public function create($type, $region, $backupId)
+    public function create($type, $region, $backupId, $label = null)
     {
-        $request = new ServerRequest('POST', 'linode/instances', [], json_encode([
+        $params = [
             'type' => $type,
             'region' => $region,
-            'backup_id' => $backupId
-        ]));
-        $result = $this->getLinodeClient()->send($request);
+            'backup_id' => $backupId,
+        ];
+        if ($label) {
+            $params['label'] = $label;
+        }
+        $request = new ServerRequest('POST', 'linode/instances', [], json_encode($params));
+        $response = $this->getLinodeClient()->send($request);
+        $result = new LinodeModel();
+        $result->populate($response);
 
         return $result;
     }
 
-    public function reboot($linodeId)
+    public function boot($linodeId): bool
+    {
+        $request = new ServerRequest('POST', 'linode/instances/' . $linodeId . '/boot');
+        $this->getLinodeClient()->send($request);
+
+        return true;
+    }
+
+    public function reboot($linodeId): bool
     {
         $request = new ServerRequest('POST', 'linode/instances/' . $linodeId . '/reboot');
-        $result = $this->getLinodeClient()->send($request);
+        $this->getLinodeClient()->send($request);
 
-        return $result;
+        return true;
     }
 
     public function delete($linodeId)

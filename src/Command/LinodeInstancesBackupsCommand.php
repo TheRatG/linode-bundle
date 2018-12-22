@@ -7,20 +7,31 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use TheRat\LinodeBundle\Services\LinodeBackupsService;
 
-class LinodeInstancesBackupsCommand extends Command implements ContainerAwareInterface
+class LinodeInstancesBackupsCommand extends Command
 {
-    use ContainerAwareTrait;
+    const NAME = 'linode:instances:backups-list';
+    const DESCRIPTION = 'Returns information about this Linode\'s available backups.';
+
+    /**
+     * @var LinodeBackupsService
+     */
+    private $backupsService;
+
+    public function __construct(LinodeBackupsService $backupsService)
+    {
+        parent::__construct(self::NAME);
+
+        $this->backupsService = $backupsService;
+    }
 
     protected function configure()
     {
         $this
             ->setName('linode:instances:backups')
             ->addArgument('linode-id', InputArgument::REQUIRED, 'ID of the Linode to look up')
-            ->setDescription('Returns information about this Linode\'s available backups.');
+            ->setDescription(self::DESCRIPTION);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -30,29 +41,22 @@ class LinodeInstancesBackupsCommand extends Command implements ContainerAwareInt
         $io = new SymfonyStyle($input, $output);
         $io->title('List Backups for ' . $linodeId);
 
-        $service = $this->container->get(LinodeBackupsService::class);
-        $response = $service->loadList($linodeId);
+        $list = $this->backupsService->loadList($linodeId);
 
         $backups = [];
-        foreach ($response->getData() as $item) {
-            $backups[] = $this->extractData($item);
+        foreach ($list as $item) {
+            $backups[] = [
+                'id' => $item->getId(),
+                'type' => $item->getType(),
+                'status' => $item->getStatus(),
+                'created' => $item->getCreated()->format('Y-m-d H:i:s'),
+                'updated' => $item->getUpdated()->format('Y-m-d H:i:s'),
+            ];
         }
 
         $io->table(
             array_keys(current($backups)),
             $backups
         );
-    }
-
-    protected function extractData(array $item)
-    {
-        return [
-            'id' => $item['id'],
-            'type' => $item['type'],
-            'status' => $item['status'],
-            'created' => $item['created'],
-            'updated' => $item['updated'],
-            'region' => $item['region'],
-        ];
     }
 }
