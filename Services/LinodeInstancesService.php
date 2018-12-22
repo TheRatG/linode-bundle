@@ -49,4 +49,32 @@ class LinodeInstancesService implements LinodeClientAwareInterface
 
         return $result;
     }
+
+    public function create($type, $region, $backupId)
+    {
+        $request = new ServerRequest('POST', 'linode/instances', [], json_encode([
+            'type' => $type,
+            'region' => $region,
+            'backup_id' => $backupId
+        ]));
+        $result = $this->getLinodeClient()->send($request);
+
+        return $result;
+    }
+
+    public function reboot($linodeId)
+    {
+        $request = new ServerRequest('POST', 'linode/instances/' . $linodeId . '/reboot');
+        $result = $this->getLinodeClient()->send($request);
+
+        return $result;
+    }
+
+    public function delete($linodeId)
+    {
+        $request = new ServerRequest('DELETE', 'linode/instances/' . $linodeId);
+        $result = $this->getLinodeClient()->send($request);
+
+        return $result;
+    }
 }

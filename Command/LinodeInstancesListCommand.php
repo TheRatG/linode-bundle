@@ -9,12 +9,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TheRat\LinodeBundle\Services\LinodeInstancesService;
 
-class LinodeInstancesCommand extends ContainerAwareCommand
+class LinodeInstancesListCommand extends ContainerAwareCommand
 {
     protected function configure()
     {
         $this
-            ->setName('linode:instances')
+            ->setName('linode:instances:list')
             ->addOption('page', null, InputOption::VALUE_REQUIRED, 1, 'The page of a collection to return.')
             ->addOption('page_size', null, InputOption::VALUE_REQUIRED, 100, 'The number of items to return per page.')
             ->setDescription('Returns an array of all Linodes on your Account.');
