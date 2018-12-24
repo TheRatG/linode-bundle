@@ -32,10 +32,9 @@ class LinodeInstancesService implements LinodeClientAwareInterface
         $page = 1;
         do {
             $response = $this->loadList($page++);
-            foreach ($response['data'] as $row) {
-                if ($label === $row['label']) {
-                    $result = new LinodeModel();
-                    $result->populate($row);
+            foreach ($response as $row) {
+                if ($label === $row->getLabel()) {
+                    $result = $row;
                     break;
                 }
             }

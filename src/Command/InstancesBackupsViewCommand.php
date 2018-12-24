@@ -10,29 +10,29 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
-use TheRat\LinodeBundle\Services\LinodeInstancesService;
+use TheRat\LinodeBundle\Services\LinodeBackupsService;
 
-class LinodeInstancesViewCommand extends Command
+class InstancesBackupsViewCommand extends Command
 {
-    const NAME = 'linode:instances:view';
-    const DESCRIPTION = 'Get a specific Linode by ID.';
+    const NAME = 'linode:instances:backups-view';
+    const DESCRIPTION = 'Returns information about a Backup.';
 
     /**
-     * @var LinodeInstancesService
+     * @var LinodeBackupsService
      */
-    private $instancesService;
+    private $backupsService;
 
-    public function __construct(LinodeInstancesService $instancesService)
+    public function __construct(LinodeBackupsService $backupsService)
     {
         parent::__construct(self::NAME);
 
-        $this->instancesService = $instancesService;
+        $this->backupsService = $backupsService;
     }
-
     protected function configure()
     {
         $this
             ->addArgument('linode-id', InputArgument::REQUIRED, 'ID of the Linode to look up')
+            ->addArgument('backup-id', InputArgument::REQUIRED, 'The ID of the Linode the Backup belongs to.')
             ->setDescription(self::DESCRIPTION);
     }
 
@@ -41,7 +41,9 @@ class LinodeInstancesViewCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $io->title(self::DESCRIPTION);
 
-        $response = $this->instancesService->view((int)$input->getArgument('linode-id'));
+        $linodeId = (int)$input->getArgument('linode-id');
+        $backupId = (int)$input->getArgument('backup-id');
+        $response = $this->backupsService->view($linodeId, $backupId);
 
         $jsonString = json_encode($response->toArray(), JSON_PRETTY_PRINT);
         $io->writeln($jsonString);

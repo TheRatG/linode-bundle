@@ -4,7 +4,10 @@ namespace TheRat\LinodeBundle\MessageHandler;
 
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
+use TheRat\LinodeBundle\Event\CloneLinodeEventArgs;
+use TheRat\LinodeBundle\Events;
 use TheRat\LinodeBundle\Message\CreateByLastBackupMessage;
 use TheRat\LinodeBundle\Model\Instances\BackupModel;
 use TheRat\LinodeBundle\Model\Instances\LinodeModel;
@@ -22,11 +25,19 @@ class CreateByLastBackupHandler implements MessageHandlerInterface, LoggerAwareI
      * @var LinodeBackupsService
      */
     private $backupsService;
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
 
-    public function __construct(LinodeInstancesService $instancesService, LinodeBackupsService $backupsService)
-    {
+    public function __construct(
+        LinodeInstancesService $instancesService,
+        LinodeBackupsService $backupsService,
+        EventDispatcherInterface $eventDispatcher
+    ) {
         $this->instancesService = $instancesService;
         $this->backupsService = $backupsService;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function __invoke(CreateByLastBackupMessage $message)
@@ -52,6 +63,8 @@ class CreateByLastBackupHandler implements MessageHandlerInterface, LoggerAwareI
                 $backup = $backups->first();
                 $this->logger->debug('Create new instance...');
                 $cloneLabel = $this->buildLabel($linode->getLabel());
+
+                $this->eventDispatcher->dispatch(Events::preCreateByLastBackup, new CloneLinodeEventArgs($linode));
                 $newLinode = $this->instancesService->create(
                     $linode->getType(), $linode->getRegion(), $backup->getId(), $cloneLabel
                 );
@@ -77,6 +90,7 @@ class CreateByLastBackupHandler implements MessageHandlerInterface, LoggerAwareI
                     $newLinode->getLabel(),
                     $newLinode->getStatus(),
                 ]));
+                $this->eventDispatcher->dispatch(Events::postCreateByLastBackup, new CloneLinodeEventArgs($linode));
                 $message->setNewLinode($newLinode);
             }
         } else {
@@ -84,16 +98,22 @@ class CreateByLastBackupHandler implements MessageHandlerInterface, LoggerAwareI
         }
     }
 
-    protected function buildLabel($sourceLabel)
+    protected function buildLabel($sourceLabel, $try = 1)
     {
         $ar = explode('_', $sourceLabel);
         $last = array_pop($ar);
         if (is_numeric($last)) {
-            $last++;
-        } else {
-            $last = 1;
+            $try = $last;
         }
+        $last = $try + 1;
+
         array_push($ar, $last);
-        return implode('_', $ar);
+        $result = implode('_', $ar);
+
+        if ($this->instancesService->viewByLabel($result)) {
+            $result = $this->buildLabel($sourceLabel, $try + 1);
+        }
+
+        return $result;
     }
 }

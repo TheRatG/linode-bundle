@@ -2,31 +2,29 @@
 
 namespace TheRat\LinodeBundle\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
-use TheRat\LinodeBundle\Services\LinodeInstancesService;
+use Symfony\Component\Messenger\MessageBusInterface;
+use TheRat\LinodeBundle\Message\LinodeBootMessage;
 
-class LinodeInstancesRebootCommand extends Command
+class InstancesBootCommand extends Command
 {
-    const NAME = 'linode:instances:reboot';
-    const DESCRIPTION = 'Reboot Linode';
+    const NAME = 'linode:instances:boot';
+    const DESCRIPTION = 'Boots a Linode you have permission to modify.';
 
     /**
-     * @var LinodeInstancesService
+     * @var MessageBusInterface
      */
-    private $instancesService;
+    private $messageBus;
 
-    public function __construct(LinodeInstancesService $instancesService)
+    public function __construct(MessageBusInterface $messageBus)
     {
         parent::__construct(self::NAME);
 
-        $this->instancesService = $instancesService;
+        $this->messageBus = $messageBus;
     }
 
     protected function configure()
@@ -42,7 +40,9 @@ class LinodeInstancesRebootCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $io->title(self::DESCRIPTION);
 
-        $this->instancesService->reboot((int)$input->getArgument('linode-id'));
+        $linodeId = (int)$input->getArgument('linode-id');
+        $message = new LinodeBootMessage($linodeId);
+        $this->messageBus->dispatch($message);
 
         $io->success('Success');
     }

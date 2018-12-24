@@ -10,7 +10,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Messenger\MessageBusInterface;
 use TheRat\LinodeBundle\Message\SwapIpv4Message;
 
-class LinodeNetworkingSwapIpv4Command extends Command
+class NetworkingSwapIpv4Command extends Command
 {
     const NAME = 'linode:networking:swap-ipv4';
     const DESCRIPTION = 'Swap ips between two instances';

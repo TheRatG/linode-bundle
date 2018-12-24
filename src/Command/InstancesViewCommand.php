@@ -12,10 +12,10 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use TheRat\LinodeBundle\Services\LinodeInstancesService;
 
-class LinodeInstancesDeleteCommand extends Command
+class InstancesViewCommand extends Command
 {
-    const NAME = 'linode:instances:delete';
-    const DESCRIPTION = 'Delete Linode';
+    const NAME = 'linode:instances:view';
+    const DESCRIPTION = 'Get a specific Linode by ID.';
 
     /**
      * @var LinodeInstancesService
@@ -32,7 +32,6 @@ class LinodeInstancesDeleteCommand extends Command
     protected function configure()
     {
         $this
-            ->setName(self::NAME)
             ->addArgument('linode-id', InputArgument::REQUIRED, 'ID of the Linode to look up')
             ->setDescription(self::DESCRIPTION);
     }
@@ -42,9 +41,9 @@ class LinodeInstancesDeleteCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $io->title(self::DESCRIPTION);
 
-        if ($io->confirm('Deleting a Linode is a destructive action and cannot be undone.', false)) {
-            $this->instancesService->delete((int)$input->getArgument('linode-id'));
-            $io->success('Success');
-        }
+        $response = $this->instancesService->view((int)$input->getArgument('linode-id'));
+
+        $jsonString = json_encode($response->toArray(), JSON_PRETTY_PRINT);
+        $io->writeln($jsonString);
     }
 }

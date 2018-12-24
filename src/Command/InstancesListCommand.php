@@ -9,7 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TheRat\LinodeBundle\Services\LinodeInstancesService;
 
-class LinodeInstancesListCommand extends Command
+class InstancesListCommand extends Command
 {
     const NAME = 'linode:instances:list';
     const DESCRIPTION = 'Returns an array of all Linode instances on your Account.';

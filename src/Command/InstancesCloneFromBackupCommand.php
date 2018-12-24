@@ -12,7 +12,7 @@ use TheRat\LinodeBundle\Message\CreateByLastBackupMessage;
 use TheRat\LinodeBundle\Message\LinodeBootMessage;
 use TheRat\LinodeBundle\Message\SwapIpv4Message;
 
-class LinodeInstancesCloneFromBackupCommand extends Command
+class InstancesCloneFromBackupCommand extends Command
 {
     const NAME = 'linode:instances:create-by-last-backup';
     const DESCRIPTION = 'Create linode instance by last backup';
