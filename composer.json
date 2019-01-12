@@ -16,24 +16,24 @@
         "doctrine/collections": "^1.5",
         "guzzlehttp/guzzle": "~6.3",
         "phpdocumentor/reflection-docblock": "~4.0",
-        "symfony/config": "~3.4|~4.0",
-        "symfony/console": "~3.4|~4.0",
-        "symfony/dependency-injection": "~3.4|~4.0",
-        "symfony/dotenv": "~3.4|~4.0",
-        "symfony/event-dispatcher": "~3.4|~4.0",
-        "symfony/framework-bundle": "~3.4|~4.0",
-        "symfony/http-kernel": "~3.4|~4.0",
-        "symfony/messenger": "~3.4|~4.0",
-        "symfony/property-info": "~3.4|~4.0",
-        "symfony/serializer": "~3.4|~4.0",
-        "symfony/yaml": "~3.4|~4.0"
+        "symfony/config": "~4.0",
+        "symfony/console": "~4.0",
+        "symfony/dependency-injection": "~4.0",
+        "symfony/dotenv": "~4.0",
+        "symfony/event-dispatcher": "~4.0",
+        "symfony/framework-bundle": "~4.0",
+        "symfony/http-kernel": "~4.0",
+        "symfony/messenger": "~4.0",
+        "symfony/property-info": "~4.0",
+        "symfony/serializer": "~4.0",
+        "symfony/yaml": "~4.0"
     },
     "config": {
         "sort-packages": true,
         "optimize-autoloader": true
     },
     "require-dev": {
-        "symfony/var-dumper": "~3.4|~4.0"
+        "symfony/var-dumper": "~4.0"
     },
     "autoload": {
         "psr-4": {
