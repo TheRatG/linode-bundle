@@ -104,6 +104,8 @@ class CreateByLastBackupHandler implements MessageHandlerInterface, LoggerAwareI
         $last = array_pop($ar);
         if (is_numeric($last)) {
             $try = $last;
+        } else {
+            $ar[] = $last;
         }
         $last = $try + 1;
 
