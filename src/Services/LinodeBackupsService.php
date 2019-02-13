@@ -37,6 +37,7 @@ class LinodeBackupsService implements LinodeClientAwareInterface
             }
             return ($a > $b) ? -1 : 1;
         });
+        $rows = array_filter($rows);
 
         $result = new BackupCollection($rows);
 
