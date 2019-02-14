@@ -22,10 +22,10 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->scalarNode('token')
-                    ->isRequired()
-                    ->cannotBeEmpty()
-                ->end()
+            ->scalarNode('token')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->end()
             ->end();
 
         // Here you should define the parameters that are allowed to
