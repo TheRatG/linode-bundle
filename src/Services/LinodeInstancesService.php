@@ -81,6 +81,14 @@ class LinodeInstancesService implements LinodeClientAwareInterface
         return $result;
     }
 
+    public function shutdown($linodeId): bool
+    {
+        $request = new ServerRequest('POST', 'linode/instances/' . $linodeId . '/shutdown');
+        $this->getLinodeClient()->send($request);
+
+        return true;
+    }
+
     public function boot($linodeId): bool
     {
         $request = new ServerRequest('POST', 'linode/instances/' . $linodeId . '/boot');

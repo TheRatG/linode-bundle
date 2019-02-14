@@ -76,9 +76,14 @@ class SwapIpv4Handler implements MessageHandlerInterface, LoggerAwareInterface
                 $collection->add($assigment);
             }
 
+            $this->instancesService->shutdown($firstLinode->getId());
+            $this->instancesService->shutdown($secondLinode->getId());
+            
             $this->networkingService->ipv4Assign($firstLinode->getRegion(), $collection);
             $this->eventDispatcher->dispatch(Events::postSwapIpv4,
                 new CloneLinodeEventArgs($firstLinode, $secondLinode));
+            
+            $this->instancesService->boot($secondLinode->getId());
         } else {
             throw new \RuntimeException('Linodes not found');
         }
